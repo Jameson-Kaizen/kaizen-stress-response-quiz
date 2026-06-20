@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What's Your Stress Response Style? | Kaizen Education Services</title>
+  <meta name="description" content="Your nervous system has a default setting under stress. In 24 questions, discover whether you fight, flee, freeze, or fawn, and what it means for your focus and relationships." />
+
+  <!-- Open Graph / share. Set the absolute URLs at deploy time (Phase 2). -->
+  <meta property="og:title" content="What's Your Stress Response Style?" />
+  <meta property="og:description" content="In 24 questions, discover how your brain responds to stress." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="og-share.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+
+  <style>
+    html, body { margin: 0; padding: 0; background: #231f20; }
+    #root { min-height: 100vh; }
+    /* Simple pre-hydration splash so the page is never blank while Babel compiles */
+    #boot { min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            font-family: 'Poppins', system-ui, sans-serif; color: #888; font-size: 14px;
+            letter-spacing: 0.1em; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+  <div id="root"><div id="boot">Loading your assessment...</div></div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useRef } = React;
+
+
+// ─── BRAND ────────────────────────────────────────────────────────────────────
+const BRAND = {
+  orange: "#f2673b",
+  green: "#007749",
+  black: "#231f20",
+  yellow: "#ffcf00",
+  blue: "#0170b8",
+  offwhite: "#faf8f5",
+  lightgray: "#f0ede8",
+};
+
+// ─── PHASE FLAGS ──────────────────────────────────────────────────────────────
+// Phase 1 (now): quiz + email gate live; AI insight hidden, no lead capture yet.
+// Phase 2: set LEAD_ENDPOINT to the cloud-function URL to capture leads into GHL.
+// Phase 3: set AI_ENABLED = true once the same function returns the AI insight.
+const AI_ENABLED = false;
+const LEAD_ENDPOINT = null;
+
+// ─── QUIZ DATA ────────────────────────────────────────────────────────────────
+const QUESTIONS = [
+  // DOMAIN: BODY / PHYSICAL
+  {
+    id: 1,
+    domain: "body",
+    text: "When you're overwhelmed, what does your body most often do?",
+    options: [
+      { text: "My jaw clenches, my muscles tighten, and I feel ready to confront something", type: "fight" },
+      { text: "My heart races, I feel restless and need to move or escape", type: "flight" },
+      { text: "I go heavy and still, like I can't physically get going", type: "freeze" },
+      { text: "I feel a wave of anxiety about upsetting someone, and my body braces", type: "fawn" },
+    ],
+  },
+  {
+    id: 2,
+    domain: "body",
+    text: "How does your body typically signal that you've hit your stress limit?",
+    options: [
+      { text: "Headaches, tension in my neck and shoulders, or a hot flush of anger", type: "fight" },
+      { text: "Shallow breathing, jitteriness, or an urge to pace and keep busy", type: "flight" },
+      { text: "Fatigue, numbness, or a sudden inability to think or feel clearly", type: "freeze" },
+      { text: "Stomach knots, nausea, or a kind of shrinking, like I want to disappear", type: "fawn" },
+    ],
+  },
+  {
+    id: 3,
+    domain: "body",
+    text: "After a highly stressful event, your body typically:",
+    options: [
+      { text: "Stays wound up. I'm irritable and find it hard to come down for hours", type: "fight" },
+      { text: "Keeps spinning. I replay everything and can't settle even when it's over", type: "flight" },
+      { text: "Crashes completely. I need to lie down or zone out for a long time", type: "freeze" },
+      { text: "Feels exhausted from managing everyone else's emotions through it", type: "fawn" },
+    ],
+  },
+
+  // DOMAIN: EMOTION / EMOTIONAL RESPONSE
+  {
+    id: 4,
+    domain: "emotion",
+    text: "When someone criticises you unfairly, your first emotional reaction is usually:",
+    options: [
+      { text: "Anger. I feel a strong urge to defend myself or set the record straight", type: "fight" },
+      { text: "Anxiety. I immediately want to get away from the situation", type: "flight" },
+      { text: "Nothing at first. I go blank and process it much later", type: "freeze" },
+      { text: "Worry about their feelings. I often apologise even when I shouldn't", type: "fawn" },
+    ],
+  },
+  {
+    id: 5,
+    domain: "emotion",
+    text: "When you sense conflict brewing between others near you, you feel:",
+    options: [
+      { text: "Alert and ready. I'm likely to step in and address it directly", type: "fight" },
+      { text: "Anxious. I want to physically remove myself from the situation", type: "flight" },
+      { text: "Frozen and avoidant. I go quiet and hope it passes", type: "freeze" },
+      { text: "Compelled to smooth it over. I'll do almost anything to reduce the tension", type: "fawn" },
+    ],
+  },
+  {
+    id: 6,
+    domain: "emotion",
+    text: "What emotion are you most likely to mask or suppress under pressure?",
+    options: [
+      { text: "Vulnerability. I'd rather come across as strong or certain than scared", type: "fight" },
+      { text: "Fear. I manage it by staying busy and avoiding stillness", type: "flight" },
+      { text: "Sadness. I go numb instead of letting myself feel it fully", type: "freeze" },
+      { text: "Anger. I swallow it to keep the peace and avoid conflict", type: "fawn" },
+    ],
+  },
+
+  // DOMAIN: COGNITION / THINKING PATTERNS
+  {
+    id: 7,
+    domain: "cognition",
+    text: "Under pressure, your thoughts most often sound like:",
+    options: [
+      { text: "'This isn't right. Someone needs to fix this, probably me.'", type: "fight" },
+      { text: "'I need to figure this out immediately. What's my escape route?'", type: "flight" },
+      { text: "'I can't think. My mind is blank. I'll deal with it later.'", type: "freeze" },
+      { text: "'How is everyone else feeling about this? Am I causing a problem?'", type: "fawn" },
+    ],
+  },
+  {
+    id: 8,
+    domain: "cognition",
+    text: "When you have a difficult decision to make, you tend to:",
+    options: [
+      { text: "Make it quickly and decisively. Overthinking feels like weakness", type: "fight" },
+      { text: "Research obsessively and weigh endless options to avoid making the wrong call", type: "flight" },
+      { text: "Stall indefinitely. The decision just doesn't get made", type: "freeze" },
+      { text: "Check what others want and shape my decision around keeping them happy", type: "fawn" },
+    ],
+  },
+  {
+    id: 9,
+    domain: "cognition",
+    text: "When you make a mistake, your inner voice most often says:",
+    options: [
+      { text: "'How did this happen? Someone (including me) needs to be held accountable.'", type: "fight" },
+      { text: "'What's the damage? How fast can I fix this and move on?'", type: "flight" },
+      { text: "'I knew I'd mess this up. I don't even know where to start fixing it.'", type: "freeze" },
+      { text: "'What will people think of me? I hope this doesn't affect my relationships.'", type: "fawn" },
+    ],
+  },
+
+  // DOMAIN: BEHAVIOUR / PATTERNS IN ACTION
+  {
+    id: 10,
+    domain: "behaviour",
+    text: "When you're in a stressful situation with others, you're most likely to:",
+    options: [
+      { text: "Take charge, push back, or challenge what's happening", type: "fight" },
+      { text: "Get busy, suggest solutions, or steer the group somewhere safer", type: "flight" },
+      { text: "Go quiet, withdraw, and wait for someone else to lead", type: "freeze" },
+      { text: "Focus on supporting others, mediating, and smoothing things over", type: "fawn" },
+    ],
+  },
+  {
+    id: 11,
+    domain: "behaviour",
+    text: "After a hard week, how do you typically decompress?",
+    options: [
+      { text: "Exercise, competition, debate, or something I can channel the energy into", type: "fight" },
+      { text: "Keeping busy: planning, organising, or working on the next thing", type: "flight" },
+      { text: "Total shutdown: sleep, screen time, or anything that requires nothing of me", type: "freeze" },
+      { text: "Connecting with people I care about, making sure everyone around me is okay", type: "fawn" },
+    ],
+  },
+  {
+    id: 12,
+    domain: "behaviour",
+    text: "How do you handle it when someone sets a boundary with you that you disagree with?",
+    options: [
+      { text: "I challenge it. I'll push back or at least make my position clear", type: "fight" },
+      { text: "I avoid the tension by creating distance or focusing on something else", type: "flight" },
+      { text: "I don't respond much at all. I'm not sure what I think or feel", type: "freeze" },
+      { text: "I accept it even if it costs me. Their comfort matters more in the moment", type: "fawn" },
+    ],
+  },
+
+  // DOMAIN: RELATIONSHIPS
+  {
+    id: 13,
+    domain: "relationships",
+    text: "In a close relationship, when you feel hurt, you usually:",
+    options: [
+      { text: "Confront the person. I need to address it or it festers", type: "fight" },
+      { text: "Pull back and put distance between us until I feel safe again", type: "flight" },
+      { text: "Say nothing. I'm not even sure I can identify what I'm feeling", type: "freeze" },
+      { text: "Minimise my hurt and focus on what I might have done to cause it", type: "fawn" },
+    ],
+  },
+  {
+    id: 14,
+    domain: "relationships",
+    text: "When someone important to you is upset with you, your first instinct is:",
+    options: [
+      { text: "Defend myself. I want them to understand my side of things", type: "fight" },
+      { text: "Create space. I need time before I can engage with this", type: "flight" },
+      { text: "Shut down. I don't know what to say so I say nothing", type: "freeze" },
+      { text: "Apologise immediately and try to fix it, even if I'm not sure it's my fault", type: "fawn" },
+    ],
+  },
+
+  // DOMAIN: NERVOUS SYSTEM RECOVERY
+  {
+    id: 15,
+    domain: "recovery",
+    text: "How long does it typically take you to fully recover after a major stressor?",
+    options: [
+      { text: "I can push through fast, but I often realise later I was still activated", type: "fight" },
+      { text: "A while. I keep processing, planning, and worrying even after it's resolved", type: "flight" },
+      { text: "A very long time. Once I shut down, it takes a lot to get moving again", type: "freeze" },
+      { text: "Depends on the relationship. If people are okay with me, I recover faster", type: "fawn" },
+    ],
+  },
+  {
+    id: 16,
+    domain: "recovery",
+    text: "What does your inner recovery process look like?",
+    options: [
+      { text: "I process by doing: movement, action, and talking it through help me", type: "fight" },
+      { text: "I process by thinking: solo analysis, writing, or researching next steps", type: "flight" },
+      { text: "I process by withdrawing. I need quiet, zero demands, and time", type: "freeze" },
+      { text: "I process by connecting. Being reassured that I'm okay in people's eyes helps", type: "fawn" },
+    ],
+  },
+
+  // Added 2026-06-20 to balance every domain to 4 questions (16 -> 24) and steady the domain breakdown.
+  {
+    id: 17,
+    domain: "body",
+    text: "When you wake up already dreading a stressful day, your body tends to:",
+    options: [
+      { text: "Feel coiled and tense, like I'm braced for a fight", type: "fight" },
+      { text: "Buzz with restless energy that makes it hard to sit still", type: "flight" },
+      { text: "Feel leaden and slow, like I can barely get going", type: "freeze" },
+      { text: "Tighten with worry about who I might let down today", type: "fawn" },
+    ],
+  },
+  {
+    id: 18,
+    domain: "emotion",
+    text: "When plans fall apart at the last minute, your gut reaction is:",
+    options: [
+      { text: "Frustration. I want to fix it or find who dropped the ball", type: "fight" },
+      { text: "A jolt of urgency to scramble and find another option", type: "flight" },
+      { text: "A blank, flat feeling, like I have checked out", type: "freeze" },
+      { text: "Concern for everyone else affected before I check in with myself", type: "fawn" },
+    ],
+  },
+  {
+    id: 19,
+    domain: "cognition",
+    text: "When you replay a tense conversation afterward, you mostly think:",
+    options: [
+      { text: "What I should have said to stand my ground", type: "fight" },
+      { text: "How I could have steered it somewhere safer or ended it sooner", type: "flight" },
+      { text: "Very little. The whole thing is a bit of a blur", type: "freeze" },
+      { text: "Whether I upset them and how to smooth it over next time", type: "fawn" },
+    ],
+  },
+  {
+    id: 20,
+    domain: "behaviour",
+    text: "When a deadline suddenly moves up, you tend to:",
+    options: [
+      { text: "Get sharp and driven, pushing hard to take control of it", type: "fight" },
+      { text: "Switch into overdrive, juggling tasks and options at speed", type: "flight" },
+      { text: "Stall and avoid it, even though I know the clock is ticking", type: "freeze" },
+      { text: "Check how it affects everyone else and try to keep them okay first", type: "fawn" },
+    ],
+  },
+  {
+    id: 21,
+    domain: "relationships",
+    text: "When a friend cancels on you repeatedly, you usually:",
+    options: [
+      { text: "Tell them directly that it bothers me", type: "fight" },
+      { text: "Quietly start making other plans and pull back", type: "flight" },
+      { text: "Let it slide and say nothing, even if it stings", type: "freeze" },
+      { text: "Assume it is fine and reassure them it is no problem", type: "fawn" },
+    ],
+  },
+  {
+    id: 22,
+    domain: "relationships",
+    text: "When you need support from someone close, you tend to:",
+    options: [
+      { text: "Ask for it plainly, or push until I get a response", type: "fight" },
+      { text: "Stay busy and handle it myself rather than lean on them", type: "flight" },
+      { text: "Go quiet and hope they notice without my having to ask", type: "freeze" },
+      { text: "Downplay what I need so I am not a burden to them", type: "fawn" },
+    ],
+  },
+  {
+    id: 23,
+    domain: "recovery",
+    text: "What helps you feel like yourself again after a rough stretch?",
+    options: [
+      { text: "Doing something physical and decisive that burns off the charge", type: "fight" },
+      { text: "Getting organised and having a plan for what is next", type: "flight" },
+      { text: "Long stretches of low-demand quiet with nothing expected of me", type: "freeze" },
+      { text: "Reconnecting with people and knowing we are okay", type: "fawn" },
+    ],
+  },
+  {
+    id: 24,
+    domain: "recovery",
+    text: "When you have not fully recovered yet, the giveaway is:",
+    options: [
+      { text: "I am short-tempered and quick to snap at small things", type: "fight" },
+      { text: "My mind keeps racing and I cannot switch off the planning", type: "flight" },
+      { text: "I feel flat, foggy, and hard to motivate", type: "freeze" },
+      { text: "I am over-focused on everyone else and cannot locate my own needs", type: "fawn" },
+    ],
+  },
+];
+
+const DOMAINS = {
+  body: "Body & Physical Signals",
+  emotion: "Emotional Responses",
+  cognition: "Thought Patterns",
+  behaviour: "Behavioural Patterns",
+  relationships: "Relationships Under Stress",
+  recovery: "Nervous System Recovery",
+};
+
+const TYPE_INFO = {
+  fight: {
+    label: "The Activator",
+    subtitle: "Fight Response",
+    color: BRAND.orange,
+    tagline: "Your nervous system surges forward, ready to confront, defend, and control.",
+    icon: "⚡",
+  },
+  flight: {
+    label: "The Strategist",
+    subtitle: "Flight Response",
+    color: BRAND.blue,
+    tagline: "Your nervous system accelerates, scanning for exits, solutions, and safer ground.",
+    icon: "🌊",
+  },
+  freeze: {
+    label: "The Still Point",
+    subtitle: "Freeze Response",
+    color: BRAND.green,
+    tagline: "Your nervous system conserves, going inward, quiet, and motionless when the load is too high.",
+    icon: "🌿",
+  },
+  fawn: {
+    label: "The Harmoniser",
+    subtitle: "Fawn Response",
+    color: "#8B5CF6",
+    tagline: "Your nervous system seeks safety through others, reading the room and keeping the peace.",
+    icon: "🌸",
+  },
+};
+
+// ─── MAIN COMPONENT ────────────────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function StressQuiz() {
+  const [screen, setScreen] = useState("intro"); // intro | quiz | email | results
+  const [current, setCurrent] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [selected, setSelected] = useState(null);
+  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [aiInsight, setAiInsight] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [animating, setAnimating] = useState(false);
+  const resultsRef = useRef(null);
+  const [quizQs] = useState(() => QUESTIONS.map(qq => ({ ...qq, options: shuffle(qq.options) })));
+
+  const q = quizQs[current];
+  const progress = (current / quizQs.length) * 100;
+
+  function handleSelect(option) {
+    setSelected(option);
+  }
+
+  function handleNext() {
+    if (!selected) return;
+    const newAnswers = { ...answers, [q.id]: { type: selected.type, domain: q.domain } };
+    setAnswers(newAnswers);
+    setAnimating(true);
+    setTimeout(() => {
+      setSelected(null);
+      setAnimating(false);
+      if (current < quizQs.length - 1) {
+        setCurrent(current + 1);
+      } else {
+        setScreen("email");
+      }
+    }, 300);
+  }
+
+  function handleBack() {
+    if (current === 0) return;
+    const prev = current - 1;
+    setCurrent(prev);
+    const prevAns = answers[quizQs[prev].id];
+    setSelected(prevAns ? quizQs[prev].options.find(o => o.type === prevAns.type) : null);
+  }
+
+  function computeScores(ans) {
+    const totals = { fight: 0, flight: 0, freeze: 0, fawn: 0 };
+    const byDomain = {};
+    Object.values(ans).forEach(({ type, domain }) => {
+      totals[type]++;
+      if (!byDomain[domain]) byDomain[domain] = { fight: 0, flight: 0, freeze: 0, fawn: 0 };
+      byDomain[domain][type]++;
+    });
+    const primary = Object.entries(totals).sort((a, b) => b[1] - a[1])[0][0];
+    const secondary = Object.entries(totals).sort((a, b) => b[1] - a[1])[1][0];
+    return { totals, byDomain, primary, secondary };
+  }
+
+  async function handleEmailSubmit(e) {
+    e.preventDefault();
+    if (!email || !firstName) return;
+    setLoading(true);
+    const scores = computeScores(answers);
+    setResults(scores);
+    setScreen("results");
+    setLoading(false);
+    // Fire AI insight
+    if (AI_ENABLED) generateAiInsight(scores, firstName);
+  }
+
+  async function generateAiInsight(scores, name) {
+    setAiLoading(true);
+    const domainSummary = Object.entries(scores.byDomain).map(([domain, counts]) => {
+      const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+      return `${DOMAINS[domain]}: shows strongest ${top} response`;
+    }).join("; ");
+
+    const prompt = `You are a neuroscience-informed coach at Kaizen Education Services. Your tone is warm, direct, and insightful, like a knowledgeable friend, not a textbook.
+
+${name} just completed a stress response quiz. Their results:
+- Primary stress response: ${scores.primary} (${TYPE_INFO[scores.primary].label}, ${TYPE_INFO[scores.primary].subtitle})
+- Secondary stress response: ${scores.secondary} (${TYPE_INFO[scores.secondary].label})
+- Domain breakdown: ${domainSummary}
+- Raw scores: Fight: ${scores.totals.fight}, Flight: ${scores.totals.flight}, Freeze: ${scores.totals.freeze}, Fawn: ${scores.totals.fawn}
+
+Write a personalised 4-paragraph insight for ${name}. Structure it like this:
+1. WHAT THIS MEANS FOR YOUR BRAIN (2-3 sentences): Explain what their specific combination of primary + secondary response tells us about how their nervous system is wired. Be specific to their actual scores.
+2. YOUR HIDDEN STRENGTHS (2-3 sentences): What genuine strengths emerge from this pattern that they may not see in themselves?
+3. YOUR FRICTION POINTS (2-3 sentences): What are the 2-3 specific ways this pattern likely shows up as challenges in their daily life, relationships, or work? Be honest and specific.
+4. ONE THING TO TRY THIS WEEK (2-3 sentences): Give ONE concrete, science-backed regulation strategy tailored specifically to their primary response type. Make it practical and immediately actionable.
+
+Use ${name}'s name once in the first paragraph. Keep each paragraph focused and punchy. Do not use bullet points. Write in full paragraphs. Do not mention Kaizen or coaching services.`;
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      const data = await response.json();
+      const text = data.content?.find(b => b.type === "text")?.text || "";
+      setAiInsight(text);
+    } catch (err) {
+      setAiInsight("");
+    }
+    setAiLoading(false);
+  }
+
+  // ── SCREENS ──────────────────────────────────────────────────────────────────
+
+  if (screen === "intro") return <IntroScreen onStart={() => setScreen("quiz")} />;
+  if (screen === "quiz") return (
+    <QuizScreen
+      q={q}
+      current={current}
+      total={quizQs.length}
+      progress={progress}
+      selected={selected}
+      onSelect={handleSelect}
+      onNext={handleNext}
+      onBack={handleBack}
+      canGoBack={current > 0}
+      animating={animating}
+      domain={DOMAINS[q.domain]}
+    />
+  );
+  if (screen === "email") return (
+    <EmailScreen
+      firstName={firstName}
+      setFirstName={setFirstName}
+      email={email}
+      setEmail={setEmail}
+      onSubmit={handleEmailSubmit}
+      loading={loading}
+    />
+  );
+  if (screen === "results" && results) return (
+    <ResultsScreen
+      results={results}
+      firstName={firstName}
+      aiInsight={aiInsight}
+      aiLoading={aiLoading}
+    />
+  );
+  return null;
+}
+
+// ─── INTRO SCREEN ─────────────────────────────────────────────────────────────
+function IntroScreen({ onStart }) {
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: BRAND.black,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "40px 24px",
+      fontFamily: "'Poppins', sans-serif",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+      {/* Background blobs */}
+      <div style={{ position: "absolute", top: "-10%", right: "-5%", width: 400, height: 400, borderRadius: "50%", background: `${BRAND.orange}18`, filter: "blur(80px)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: "-10%", left: "-5%", width: 350, height: 350, borderRadius: "50%", background: `${BRAND.green}18`, filter: "blur(80px)", pointerEvents: "none" }} />
+
+      <div style={{ maxWidth: 640, width: "100%", textAlign: "center", position: "relative", zIndex: 1 }}>
+        {/* Logo bar */}
+        <div style={{ marginBottom: 48, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: BRAND.orange }} />
+          <span style={{ color: "#888", fontSize: 13, letterSpacing: "0.2em", textTransform: "uppercase", fontWeight: 500 }}>Kaizen Education Services</span>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: BRAND.green }} />
+        </div>
+
+        {/* Headline */}
+        <div style={{ fontSize: 13, color: BRAND.orange, letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600, marginBottom: 16 }}>Free Assessment</div>
+        <h1 style={{ fontSize: "clamp(32px, 6vw, 56px)", fontWeight: 800, color: "#fff", lineHeight: 1.1, margin: "0 0 24px" }}>
+          What's Your <span style={{ color: BRAND.orange }}>Stress Response</span> Style?
+        </h1>
+        <p style={{ fontSize: 18, color: "#aaa", lineHeight: 1.7, marginBottom: 40, fontWeight: 300 }}>
+          Your nervous system has a default setting, a pattern it falls into when life gets hard. Most people never learn what theirs is. In 24 questions, discover how your brain responds to stress and why it matters for everything from your focus to your relationships.
+        </p>
+
+        {/* Stats row */}
+        <div style={{ display: "flex", gap: 32, justifyContent: "center", marginBottom: 48, flexWrap: "wrap" }}>
+          {[["24", "Questions"], ["6", "Domains"], ["~7", "Minutes"]].map(([val, label]) => (
+            <div key={label} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: BRAND.yellow }}>{val}</div>
+              <div style={{ fontSize: 13, color: "#666", fontWeight: 400 }}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Domain pills */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 48 }}>
+          {Object.values(DOMAINS).map(d => (
+            <span key={d} style={{ padding: "6px 14px", borderRadius: 20, border: "1px solid #333", color: "#888", fontSize: 12, fontWeight: 400 }}>{d}</span>
+          ))}
+        </div>
+
+        <button
+          onClick={onStart}
+          style={{
+            background: BRAND.orange,
+            color: "#fff",
+            border: "none",
+            borderRadius: 12,
+            padding: "18px 48px",
+            fontSize: 17,
+            fontWeight: 700,
+            cursor: "pointer",
+            fontFamily: "'Poppins', sans-serif",
+            letterSpacing: "0.02em",
+            transition: "all 0.2s",
+            boxShadow: `0 8px 32px ${BRAND.orange}40`,
+          }}
+          onMouseOver={e => e.currentTarget.style.transform = "translateY(-2px)"}
+          onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}
+        >
+          Begin the Assessment →
+        </button>
+
+        <p style={{ marginTop: 20, fontSize: 13, color: "#555" }}>Free · No credit card · Results delivered instantly</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── QUIZ SCREEN ──────────────────────────────────────────────────────────────
+function QuizScreen({ q, current, total, progress, selected, onSelect, onNext, onBack, canGoBack, animating, domain }) {
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: BRAND.offwhite,
+      display: "flex",
+      flexDirection: "column",
+      fontFamily: "'Poppins', sans-serif",
+    }}>
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+      {/* Progress bar */}
+      <div style={{ background: "#e8e4df", height: 4 }}>
+        <div style={{ height: 4, background: BRAND.orange, width: `${progress}%`, transition: "width 0.4s ease" }} />
+      </div>
+
+      {/* Header */}
+      <div style={{ padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #e0dbd4" }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "#555", letterSpacing: "0.1em", textTransform: "uppercase" }}>Kaizen · Stress Response Quiz</div>
+        <div style={{ fontSize: 13, color: "#999" }}>{current + 1} <span style={{ color: "#ccc" }}>/</span> {total}</div>
+      </div>
+
+      {/* Question */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "48px 24px 32px", maxWidth: 680, margin: "0 auto", width: "100%" }}>
+
+        {/* Domain badge */}
+        <div style={{ alignSelf: "flex-start", marginBottom: 16 }}>
+          <span style={{ background: `${BRAND.green}15`, color: BRAND.green, padding: "4px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em" }}>{domain}</span>
+        </div>
+
+        <h2 style={{
+          fontSize: "clamp(20px, 4vw, 26px)",
+          fontWeight: 700,
+          color: BRAND.black,
+          lineHeight: 1.4,
+          margin: "0 0 36px",
+          alignSelf: "flex-start",
+          opacity: animating ? 0 : 1,
+          transform: animating ? "translateY(8px)" : "translateY(0)",
+          transition: "all 0.3s ease",
+        }}>
+          {q.text}
+        </h2>
+
+        {/* Options */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", opacity: animating ? 0 : 1, transition: "opacity 0.3s ease" }}>
+          {q.options.map((opt, i) => {
+            const isSelected = selected?.text === opt.text;
+            return (
+              <button
+                key={i}
+                onClick={() => onSelect(opt)}
+                style={{
+                  padding: "18px 24px",
+                  borderRadius: 14,
+                  border: isSelected ? `2px solid ${BRAND.orange}` : "2px solid #e0dbd4",
+                  background: isSelected ? `${BRAND.orange}08` : "#fff",
+                  textAlign: "left",
+                  cursor: "pointer",
+                  fontFamily: "'Poppins', sans-serif",
+                  fontSize: 15,
+                  fontWeight: isSelected ? 600 : 400,
+                  color: isSelected ? BRAND.black : "#555",
+                  lineHeight: 1.5,
+                  transition: "all 0.18s ease",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 14,
+                  boxShadow: isSelected ? `0 4px 20px ${BRAND.orange}20` : "0 2px 8px rgba(0,0,0,0.04)",
+                }}
+              >
+                <span style={{
+                  minWidth: 26,
+                  height: 26,
+                  borderRadius: "50%",
+                  border: isSelected ? `2px solid ${BRAND.orange}` : "2px solid #ddd",
+                  background: isSelected ? BRAND.orange : "transparent",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: 1,
+                  transition: "all 0.18s",
+                }}>
+                  {isSelected && <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>✓</span>}
+                </span>
+                {opt.text}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Nav buttons */}
+        <div style={{ marginTop: 36, width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <button
+            onClick={onBack}
+            disabled={!canGoBack}
+            style={{
+              background: "transparent",
+              color: canGoBack ? "#555" : "#ccc",
+              border: "none",
+              borderRadius: 10,
+              padding: "14px 12px",
+              fontSize: 15,
+              fontWeight: 600,
+              cursor: canGoBack ? "pointer" : "not-allowed",
+              fontFamily: "'Poppins', sans-serif",
+              transition: "all 0.2s",
+            }}
+          >
+            ← Back
+          </button>
+          <button
+            onClick={handleNextSafe}
+            disabled={!selected}
+            style={{
+              background: selected ? BRAND.black : "#e0dbd4",
+              color: selected ? "#fff" : "#aaa",
+              border: "none",
+              borderRadius: 10,
+              padding: "14px 36px",
+              fontSize: 15,
+              fontWeight: 600,
+              cursor: selected ? "pointer" : "not-allowed",
+              fontFamily: "'Poppins', sans-serif",
+              transition: "all 0.2s",
+            }}
+          >
+            {current < total - 1 ? "Next →" : "See My Results →"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  function handleNextSafe() { if (selected) onNext(); }
+}
+
+// ─── EMAIL GATE ───────────────────────────────────────────────────────────────
+function EmailScreen({ firstName, setFirstName, email, setEmail, onSubmit, loading }) {
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: BRAND.black,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "40px 24px",
+      fontFamily: "'Poppins', sans-serif",
+    }}>
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+      <div style={{ maxWidth: 480, width: "100%", textAlign: "center" }}>
+        <div style={{ fontSize: 40, marginBottom: 24 }}>🧠</div>
+        <h2 style={{ fontSize: 32, fontWeight: 800, color: "#fff", marginBottom: 12 }}>You're almost there.</h2>
+        <p style={{ color: "#888", fontSize: 16, lineHeight: 1.7, marginBottom: 40 }}>
+          Your personalised stress response profile, including a breakdown across 6 domains, is ready. Enter your details to unlock it.
+        </p>
+        <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <input
+            type="text"
+            placeholder="Your first name"
+            value={firstName}
+            onChange={e => setFirstName(e.target.value)}
+            required
+            style={{
+              padding: "16px 20px",
+              borderRadius: 10,
+              border: "1px solid #333",
+              background: "#1a1a1a",
+              color: "#fff",
+              fontSize: 16,
+              fontFamily: "'Poppins', sans-serif",
+              outline: "none",
+            }}
+          />
+          <input
+            type="email"
+            placeholder="Your email address"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            style={{
+              padding: "16px 20px",
+              borderRadius: 10,
+              border: "1px solid #333",
+              background: "#1a1a1a",
+              color: "#fff",
+              fontSize: 16,
+              fontFamily: "'Poppins', sans-serif",
+              outline: "none",
+            }}
+          />
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 10, textAlign: "left", color: "#999", fontSize: 13, lineHeight: 1.55, cursor: "pointer" }}>
+            <input type="checkbox" required style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, accentColor: BRAND.orange }} />
+            <span>I agree to receive my results and occasional emails from Kaizen Education Services about coaching, resources, and events. I understand I can unsubscribe at any time.</span>
+          </label>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              background: BRAND.orange,
+              color: "#fff",
+              border: "none",
+              borderRadius: 10,
+              padding: "18px",
+              fontSize: 17,
+              fontWeight: 700,
+              cursor: "pointer",
+              fontFamily: "'Poppins', sans-serif",
+              boxShadow: `0 8px 32px ${BRAND.orange}40`,
+            }}
+          >
+            {loading ? "Analysing your results…" : "Unlock My Results →"}
+          </button>
+        </form>
+        <p style={{ marginTop: 20, fontSize: 12, color: "#444" }}>We use your details only to send your results and the emails you have agreed to. We never sell your information, and you can unsubscribe at any time.</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── RESULTS SCREEN ───────────────────────────────────────────────────────────
+function ResultsScreen({ results, firstName, aiInsight, aiLoading }) {
+  const { primary, secondary, totals, byDomain } = results;
+  const primaryInfo = TYPE_INFO[primary];
+  const secondaryInfo = TYPE_INFO[secondary];
+  const totalQ = Object.values(totals).reduce((a, b) => a + b, 0);
+
+  const RESPONSE_DEEP = {
+    fight: {
+      what: "Your nervous system responds to stress by mobilising, surging energy forward to face, challenge, or control the situation. This is an activated, high-energy state driven by the sympathetic nervous system. Under pressure, this pattern tends to read the moment as a threat and move to engage.",
+      brain: "Elevated cortisol and adrenaline can shift activity away from your prefrontal cortex (the logical, planning brain) and toward the amygdala. Your body prioritises speed over accuracy, which is why fight-responders often act first and reflect later.",
+      strengths: [
+        "You tend to be decisive and action-oriented under pressure",
+        "You are often willing to have hard conversations others avoid",
+        "You can motivate others through intensity and urgency",
+        "Stress tends to activate you rather than shut you down",
+      ],
+      challenges: [
+        "Anger can escalate before you've processed what you actually feel",
+        "You may come across as controlling or aggressive without intending to",
+        "Recovery is often slower than you think. You believe you're fine before you are",
+        "Vulnerability can be difficult, and softness can feel like weakness",
+      ],
+      regulation: [
+        { title: "Cold Water Exposure", desc: "Splashing cold water on your face activates the dive reflex, slowing your heart rate and rapidly reducing amygdala activation. Many people use it as a quick 30-second reset." },
+        { title: "Intensity Shifting", desc: "Channel the energy into vigorous exercise before trying to process emotionally. The physiology needs to complete its cycle first." },
+        { title: "The Pause Protocol", desc: "Practice inserting a 90-second pause before responding to perceived threats. Jill Bolte Taylor has popularised the idea that the initial surge of anger lasts about 90 seconds, and that what follows is a choice about whether to re-trigger it." },
+      ],
+    },
+    flight: {
+      what: "Your nervous system responds to stress by accelerating: speeding up your thoughts, urging movement, and scanning for exits, solutions, and safer ground. This is also a sympathetic activation state, but instead of engaging, the energy tends to move away from the threat.",
+      brain: "Your anterior cingulate cortex is highly active, generating rapid 'what if' scenarios. The prefrontal cortex is working hard but in an anxious, looping way, planning as a way to manage fear rather than as genuine problem-solving.",
+      strengths: [
+        "You tend to be a strong planner and contingency thinker",
+        "You rarely get stuck, and you tend to move quickly under pressure",
+        "You tend to be highly adaptable and solution-focused",
+        "You bring urgency and momentum to teams",
+      ],
+      challenges: [
+        "Busyness can become avoidance. Action feels productive even when stillness is needed",
+        "Anxiety can masquerade as productivity, making rest and recovery feel unsafe",
+        "You may leave situations (jobs, relationships) before fully processing them",
+        "Worry loops. Your brain struggles to turn off the threat-scanning even when safe",
+      ],
+      regulation: [
+        { title: "Physiological Sigh", desc: "A double inhale through the nose followed by a long exhale is a breath pattern studied for reducing sympathetic activation. Researchers at Stanford have documented its calming effect, often within a few cycles." },
+        { title: "The Scheduled Worry Window", desc: "Contain your anxiety by giving it a dedicated 15-minute window each day. When worry arises outside it, note it down and defer it. This trains your brain that thoughts don't need immediate action." },
+        { title: "Complete the Stress Cycle", desc: "Flight energy needs physical completion. A 20-minute walk (especially outdoors) allows your body to biochemically signal 'I have escaped,' which is what the nervous system is waiting for." },
+      ],
+    },
+    freeze: {
+      what: "Your nervous system responds to stress by shutting down, going still, quiet, and inward when the threat load exceeds what fight or flight can handle. This is a dorsal vagal parasympathetic response, sometimes called the 'collapse' state. Your brain perceives the situation as inescapable and conserves resources.",
+      brain: "The dorsal vagus nerve (the oldest part of your autonomic nervous system) tends to take over. Blood pressure drops, cognitive function narrows, emotional access decreases, and the body goes into a low-energy conservation mode. It's a survival mechanism, not weakness.",
+      strengths: [
+        "You tend to observe carefully before acting, and impulsive decisions are rare",
+        "You can often sit with discomfort and uncertainty better than most",
+        "You often process at a deep level, even if it takes time",
+        "Your steadiness can bring calm to chaotic environments",
+      ],
+      challenges: [
+        "Decisions can stall, and initiating action in this state is genuinely hard",
+        "Emotional access is often delayed. You may not know what you feel until hours or days later",
+        "Others may misread your quiet as disinterest, avoidance, or passive resistance",
+        "Recovery from major stress can take longer than for other patterns",
+      ],
+      regulation: [
+        { title: "Pendulation", desc: "Move your attention slowly between a place of distress and a place of comfort in your body. This is a Somatic Experiencing technique that gently brings the nervous system back online without overwhelming it." },
+        { title: "Orienting", desc: "When frozen, slowly and deliberately look around the room (left, right, up, down), letting your eyes settle on objects. This activates the ventral vagus nerve and signals 'I am safe, I can look around.' It is deceptively powerful." },
+        { title: "Tiny Action", desc: "The freeze state breaks through initiation, not motivation. Commit to a single 2-minute action: stand up, drink water, send one text. Each tiny action begins thawing the system." },
+      ],
+    },
+    fawn: {
+      what: "Your nervous system responds to stress by seeking safety through other people: reading the room, managing others' emotions, smoothing conflict, and prioritising relational harmony over your own needs. This response often develops in environments where connection felt conditional on behaviour.",
+      brain: "Your social engagement system (ventral vagal, involving the face, voice, and listening) is highly activated. Your brain tends to scan for social threat (signs of disapproval, conflict, or disconnection) and to prioritise resolving it.",
+      strengths: [
+        "You tend to be unusually attuned to others' emotional states",
+        "You are often a gifted mediator, diplomat, or team builder",
+        "You create environments where people feel genuinely seen and heard",
+        "Your empathy can be a real asset in leadership, teaching, and caregiving",
+      ],
+      challenges: [
+        "Your own needs can become invisible to you under stress",
+        "Boundaries can be genuinely difficult, and saying no can produce a physical stress response",
+        "Resentment can accumulate silently before you've even registered your own feelings",
+        "Approval-seeking can override authentic expression and decision-making",
+      ],
+      regulation: [
+        { title: "The Internal Check-In", desc: "Before responding to any demand under stress, pause and ask: 'What do I actually need right now?' Not what is needed, but what you need. Build this as a ritual because your system defaults to skipping this question entirely." },
+        { title: "Somatic Boundary Practice", desc: "Notice where in your body you feel the pull to comply. Usually the chest, throat, or stomach. Simply naming the sensation ('I feel tightening in my chest') activates the prefrontal cortex and creates a momentary pause between impulse and response." },
+        { title: "Conflict Rehearsal", desc: "Practice small, low-stakes disagreements deliberately. Order something specific at a café. Decline a non-essential invitation without apologising. Each micro-act of authentic self-expression rewires the nervous system's threat response to boundary-setting." },
+      ],
+    },
+  };
+
+  const deepInfo = RESPONSE_DEEP[primary];
+
+  return (
+    <div style={{ fontFamily: "'Poppins', sans-serif", background: BRAND.offwhite, minHeight: "100vh" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+      {/* HERO */}
+      <div style={{ background: BRAND.black, padding: "60px 24px 80px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, background: `radial-gradient(ellipse at 60% 0%, ${primaryInfo.color}20 0%, transparent 60%)`, pointerEvents: "none" }} />
+        <div style={{ maxWidth: 700, margin: "0 auto", position: "relative" }}>
+          <div style={{ fontSize: 13, color: "#666", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 32 }}>Kaizen Education Services · Results</div>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>{primaryInfo.icon}</div>
+          <div style={{ fontSize: 13, color: primaryInfo.color, letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600, marginBottom: 8 }}>{primaryInfo.subtitle}</div>
+          <h1 style={{ fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 800, color: "#fff", margin: "0 0 16px" }}>
+            {firstName ? `${firstName}, you lean toward ` : "You lean toward "}
+            <span style={{ color: primaryInfo.color }}>{primaryInfo.label}</span>
+          </h1>
+          <p style={{ fontSize: 18, color: "#aaa", lineHeight: 1.7, maxWidth: 540, margin: "0 auto 40px", fontWeight: 300 }}>
+            {primaryInfo.tagline}
+          </p>
+
+          {/* Score bars */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, maxWidth: 480, margin: "0 auto" }}>
+            {Object.entries(totals).sort((a, b) => b[1] - a[1]).map(([type, count]) => {
+              const info = TYPE_INFO[type];
+              const pct = Math.round((count / totalQ) * 100);
+              return (
+                <div key={type} style={{ background: "#ffffff10", borderRadius: 10, padding: "12px 16px", textAlign: "left" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                    <span style={{ fontSize: 12, color: "#aaa", fontWeight: 500 }}>{info.label}</span>
+                    <span style={{ fontSize: 12, color: info.color, fontWeight: 700 }}>{pct}%</span>
+                  </div>
+                  <div style={{ background: "#ffffff15", borderRadius: 4, height: 6 }}>
+                    <div style={{ background: info.color, height: 6, borderRadius: 4, width: `${pct}%`, transition: "width 1s ease" }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: "0 24px 80px" }}>
+
+        {/* SECONDARY PATTERN */}
+        <Card style={{ marginTop: -32, background: "#fff", border: `2px solid ${secondaryInfo.color}30` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <span style={{ fontSize: 20 }}>{secondaryInfo.icon}</span>
+            <div>
+              <div style={{ fontSize: 12, color: secondaryInfo.color, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em" }}>Secondary Pattern</div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: BRAND.black }}>{secondaryInfo.label} · {secondaryInfo.subtitle}</div>
+            </div>
+          </div>
+          <p style={{ color: "#666", fontSize: 15, lineHeight: 1.7, margin: 0 }}>
+            When your primary response isn't available or isn't working, you tend to shift into <strong>{secondaryInfo.label}</strong> mode. This blend shapes a unique profile. Understanding both gives you the full picture of how your nervous system navigates threat.
+          </p>
+        </Card>
+
+        {/* WHAT THIS MEANS */}
+        <SectionHeader icon="🧬" title="What This Means" />
+        <Card>
+          <p style={{ color: "#555", fontSize: 15, lineHeight: 1.8, margin: 0 }}>{deepInfo.what}</p>
+        </Card>
+
+        {/* BRAIN SCIENCE */}
+        <SectionHeader icon="🔬" title="The Brain Science" />
+        <Card style={{ background: `${primaryInfo.color}08`, border: `1px solid ${primaryInfo.color}20` }}>
+          <p style={{ color: "#555", fontSize: 15, lineHeight: 1.8, margin: 0 }}>{deepInfo.brain}</p>
+        </Card>
+
+        {/* DOMAIN BREAKDOWN */}
+        <SectionHeader icon="📊" title="Your Breakdown Across 6 Domains" />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 12 }}>
+          {Object.entries(byDomain).map(([domain, counts]) => {
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            const topType = sorted[0][0];
+            const topInfo = TYPE_INFO[topType];
+            const domainTotal = Object.values(counts).reduce((a, b) => a + b, 0);
+            return (
+              <div key={domain} style={{ background: "#fff", borderRadius: 14, padding: "20px", border: "1px solid #e8e3dd" }}>
+                <div style={{ fontSize: 12, color: "#888", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{DOMAINS[domain]}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <span style={{ fontSize: 16 }}>{topInfo.icon}</span>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: topInfo.color }}>{topInfo.label}</span>
+                </div>
+                {sorted.filter(([, v]) => v > 0).map(([type, count]) => {
+                  const info = TYPE_INFO[type];
+                  const pct = Math.round((count / domainTotal) * 100);
+                  return (
+                    <div key={type} style={{ marginBottom: 6 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                        <span style={{ fontSize: 11, color: "#aaa" }}>{info.label}</span>
+                        <span style={{ fontSize: 11, color: info.color, fontWeight: 600 }}>{pct}%</span>
+                      </div>
+                      <div style={{ background: "#f0ece6", borderRadius: 3, height: 4 }}>
+                        <div style={{ background: info.color, height: 4, borderRadius: 3, width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* STRENGTHS */}
+        <SectionHeader icon="💪" title="Your Hidden Strengths" />
+        <div style={{ display: "grid", gap: 10 }}>
+          {deepInfo.strengths.map((s, i) => (
+            <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "14px 20px", border: "1px solid #e8e3dd", display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <span style={{ color: BRAND.green, fontWeight: 700, marginTop: 2 }}>✓</span>
+              <span style={{ fontSize: 15, color: "#444", lineHeight: 1.6 }}>{s}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* CHALLENGES */}
+        <SectionHeader icon="⚠️" title="Where This Pattern Creates Friction" />
+        <div style={{ display: "grid", gap: 10 }}>
+          {deepInfo.challenges.map((c, i) => (
+            <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "14px 20px", border: "1px solid #e8e3dd", display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <span style={{ color: BRAND.orange, fontWeight: 700, marginTop: 2 }}>→</span>
+              <span style={{ fontSize: 15, color: "#444", lineHeight: 1.6 }}>{c}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* REGULATION TOOLS */}
+        <SectionHeader icon="🛠️" title="Regulation Tools for Your Type" />
+        <div style={{ display: "grid", gap: 14 }}>
+          {deepInfo.regulation.map((r, i) => (
+            <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "24px", border: `1px solid ${primaryInfo.color}20` }}>
+              <div style={{ fontWeight: 700, fontSize: 16, color: BRAND.black, marginBottom: 8 }}>
+                <span style={{ color: primaryInfo.color, marginRight: 8 }}>{["01", "02", "03"][i]}</span>
+                {r.title}
+              </div>
+              <p style={{ color: "#666", fontSize: 15, lineHeight: 1.7, margin: 0 }}>{r.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {AI_ENABLED && (<>
+        {/* AI PERSONALISED INSIGHT */}
+        <SectionHeader icon="✨" title={`Your Personalised Insight${firstName ? `, ${firstName}` : ""}`} />
+        <div style={{ background: BRAND.black, borderRadius: 16, padding: "32px", color: "#fff" }}>
+          {aiLoading ? (
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              <div style={{ fontSize: 13, color: "#666", letterSpacing: "0.1em" }}>Generating your personalised analysis…</div>
+              <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 16 }}>
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: BRAND.orange, animation: `pulse 1.2s ${i * 0.4}s infinite` }} />
+                ))}
+              </div>
+            </div>
+          ) : aiInsight ? (
+            <div>
+              {aiInsight.split("\n\n").filter(p => p.trim()).map((para, i) => {
+                const isHeader = para.match(/^[A-Z\s()]+:/);
+                if (isHeader) {
+                  const [header, ...rest] = para.split(":");
+                  return (
+                    <div key={i} style={{ marginBottom: 20 }}>
+                      <div style={{ fontSize: 11, color: primaryInfo.color, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700, marginBottom: 8 }}>{header}</div>
+                      <p style={{ color: "#ccc", fontSize: 15, lineHeight: 1.8, margin: 0 }}>{rest.join(":").trim()}</p>
+                    </div>
+                  );
+                }
+                return <p key={i} style={{ color: "#ccc", fontSize: 15, lineHeight: 1.8, margin: "0 0 16px" }}>{para}</p>;
+              })}
+            </div>
+          ) : (
+            <p style={{ color: "#666", textAlign: "center" }}>Your personalised insight could not be generated at this time.</p>
+          )}
+        </div>
+
+        </>)}
+
+        {/* CTA */}
+        <div style={{ background: `linear-gradient(135deg, ${BRAND.orange}, ${BRAND.green})`, borderRadius: 20, padding: "40px 32px", textAlign: "center", marginTop: 32, color: "#fff" }}>
+          <h3 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 12px" }}>Ready to go deeper?</h3>
+          <p style={{ fontSize: 16, opacity: 0.9, margin: "0 0 28px", lineHeight: 1.6 }}>
+            Understanding your stress response is the first step. Working with it, in learning, relationships, and daily life, is where the real change happens.
+          </p>
+          <a
+            href="https://api.leadconnectorhq.com/widget/booking/ZFEujWUugeTS8QEdA4qB"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display: "inline-block",
+              background: "#fff",
+              color: BRAND.black,
+              padding: "16px 40px",
+              borderRadius: 10,
+              fontWeight: 700,
+              fontSize: 16,
+              textDecoration: "none",
+              fontFamily: "'Poppins', sans-serif",
+            }}
+          >
+            Book a Free Discovery Call →
+          </a>
+        </div>
+
+        {/* DISCLAIMER */}
+        <p style={{ fontSize: 12, color: "#999", lineHeight: 1.7, textAlign: "center", maxWidth: 620, margin: "28px auto 0" }}>
+          This quiz is a self-reflection tool, not a clinical assessment, diagnosis, or treatment, and it does not replace care from a qualified health professional. The patterns and practices described are general educational information. If you are in distress or crisis, please contact a licensed professional or your local emergency services.
+        </p>
+      </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.3; transform: scale(0.8); }
+          50% { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function Card({ children, style = {} }) {
+  return (
+    <div style={{ background: "#fff", borderRadius: 16, padding: "24px", border: "1px solid #e8e3dd", marginBottom: 12, ...style }}>
+      {children}
+    </div>
+  );
+}
+
+function SectionHeader({ icon, title }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "36px 0 16px" }}>
+      <span style={{ fontSize: 20 }}>{icon}</span>
+      <h2 style={{ fontSize: 18, fontWeight: 700, color: BRAND.black, margin: 0 }}>{title}</h2>
+    </div>
+  );
+}
+
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<StressQuiz />);
+  </script>
+</body>
+</html>
