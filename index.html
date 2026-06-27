@@ -406,12 +406,9 @@ function StressQuiz() {
   const progress = (current / quizQs.length) * 100;
 
   function handleSelect(option) {
+    if (animating) return;
     setSelected(option);
-  }
-
-  function handleNext() {
-    if (!selected) return;
-    const newAnswers = { ...answers, [q.id]: { type: selected.type, domain: q.domain } };
+    const newAnswers = { ...answers, [q.id]: { type: option.type, domain: q.domain } };
     setAnswers(newAnswers);
     setAnimating(true);
     setTimeout(() => {
@@ -422,7 +419,7 @@ function StressQuiz() {
       } else {
         setScreen("email");
       }
-    }, 300);
+    }, 260);
   }
 
   function handleBack() {
@@ -511,7 +508,6 @@ Use ${name}'s name once in the first paragraph. Keep each paragraph focused and 
       progress={progress}
       selected={selected}
       onSelect={handleSelect}
-      onNext={handleNext}
       onBack={handleBack}
       canGoBack={current > 0}
       animating={animating}
@@ -622,7 +618,7 @@ function IntroScreen({ onStart }) {
 }
 
 // ─── QUIZ SCREEN ──────────────────────────────────────────────────────────────
-function QuizScreen({ q, current, total, progress, selected, onSelect, onNext, onBack, canGoBack, animating, domain }) {
+function QuizScreen({ q, current, total, progress, selected, onSelect, onBack, canGoBack, animating, domain }) {
   return (
     <div style={{
       minHeight: "100vh",
@@ -717,7 +713,7 @@ function QuizScreen({ q, current, total, progress, selected, onSelect, onNext, o
         </div>
 
         {/* Nav buttons */}
-        <div style={{ marginTop: 36, width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ marginTop: 28, width: "100%", display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
           <button
             onClick={onBack}
             disabled={!canGoBack}
@@ -736,30 +732,10 @@ function QuizScreen({ q, current, total, progress, selected, onSelect, onNext, o
           >
             ← Back
           </button>
-          <button
-            onClick={handleNextSafe}
-            disabled={!selected}
-            style={{
-              background: selected ? BRAND.black : "#e0dbd4",
-              color: selected ? "#fff" : "#aaa",
-              border: "none",
-              borderRadius: 10,
-              padding: "14px 36px",
-              fontSize: 15,
-              fontWeight: 600,
-              cursor: selected ? "pointer" : "not-allowed",
-              fontFamily: "'Poppins', sans-serif",
-              transition: "all 0.2s",
-            }}
-          >
-            {current < total - 1 ? "Next →" : "See My Results →"}
-          </button>
         </div>
       </div>
     </div>
   );
-
-  function handleNextSafe() { if (selected) onNext(); }
 }
 
 // ─── EMAIL GATE ───────────────────────────────────────────────────────────────
