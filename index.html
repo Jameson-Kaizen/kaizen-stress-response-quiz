@@ -640,7 +640,10 @@ function QuizScreen({ q, current, total, progress, selected, onSelect, onNext, o
 
       {/* Header */}
       <div style={{ padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #e0dbd4" }}>
-        <img src="kaizen-wordmark.png" alt="Kaizen Education Services" style={{ height: 26, width: "auto" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img src="kaizen-mark.png" alt="Kaizen Education Services" style={{ height: 28, width: "auto" }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#555", letterSpacing: "0.08em", textTransform: "uppercase" }}>Stress Response Quiz</span>
+        </div>
         <div style={{ fontSize: 13, color: "#999" }}>{current + 1} <span style={{ color: "#ccc" }}>/</span> {total}</div>
       </div>
 
