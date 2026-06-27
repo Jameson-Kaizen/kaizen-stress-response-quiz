@@ -477,6 +477,19 @@ function StressQuiz() {
     track("lead_submit", {});
     track("quiz_complete", { primary: scores.primary, secondary: scores.secondary });
     track("outcome", { outcome: scores.primary });
+    if (LEAD_ENDPOINT) {
+      try {
+        fetch(LEAD_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            firstName, email, consent: true,
+            outcome: scores.primary, secondary: scores.secondary,
+            scores: scores.totals, attribution: ATTRIBUTION,
+          }),
+        }).catch(() => {});
+      } catch (e) {}
+    }
     setResults(scores);
     setScreen("results");
     setLoading(false);
