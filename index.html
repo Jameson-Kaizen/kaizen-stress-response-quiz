@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>What's Your Stress Response Style? | Kaizen Education Services</title>
   <link rel="icon" type="image/png" href="kaizen-mark.png" />
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-W56RJ3LXWW"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-W56RJ3LXWW');
+  </script>
   <meta name="description" content="Your nervous system has a default setting under stress. In 24 questions, discover whether you fight, flee, freeze, or fawn, and what it means for your focus and relationships." />
 
   <!-- Open Graph / share -->
@@ -55,6 +64,21 @@ const BRAND = {
 // Phase 3: set AI_ENABLED = true once the same function returns the AI insight.
 const AI_ENABLED = false;
 const LEAD_ENDPOINT = null;
+
+// ─── ANALYTICS ────────────────────────────────────────────────────────────────
+function track(name, params) {
+  try { if (window.gtag) window.gtag("event", name, params || {}); } catch (e) {}
+}
+const ATTRIBUTION = (() => {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    const o = { referrer: document.referrer || "", landing_url: window.location.href };
+    ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"].forEach(k => {
+      const v = p.get(k); if (v) o[k] = v;
+    });
+    return o;
+  } catch (e) { return {}; }
+})();
 
 // ─── QUIZ DATA ────────────────────────────────────────────────────────────────
 const QUESTIONS = [
@@ -408,6 +432,7 @@ function StressQuiz() {
   function handleSelect(option) {
     if (animating) return;
     setSelected(option);
+    track("question_answered", { question_index: current + 1, domain: q.domain, response_type: option.type });
     const newAnswers = { ...answers, [q.id]: { type: option.type, domain: q.domain } };
     setAnswers(newAnswers);
     setAnimating(true);
@@ -417,6 +442,7 @@ function StressQuiz() {
       if (current < quizQs.length - 1) {
         setCurrent(current + 1);
       } else {
+        track("email_gate_view", {});
         setScreen("email");
       }
     }, 260);
@@ -448,6 +474,9 @@ function StressQuiz() {
     if (!email || !firstName) return;
     setLoading(true);
     const scores = computeScores(answers);
+    track("lead_submit", {});
+    track("quiz_complete", { primary: scores.primary, secondary: scores.secondary });
+    track("outcome", { outcome: scores.primary });
     setResults(scores);
     setScreen("results");
     setLoading(false);
@@ -499,7 +528,7 @@ Use ${name}'s name once in the first paragraph. Keep each paragraph focused and 
 
   // ── SCREENS ──────────────────────────────────────────────────────────────────
 
-  if (screen === "intro") return <IntroScreen onStart={() => setScreen("quiz")} />;
+  if (screen === "intro") return <IntroScreen onStart={() => { track("quiz_start", { source: ATTRIBUTION.utm_source || "direct" }); setScreen("quiz"); }} />;
   if (screen === "quiz") return (
     <QuizScreen
       q={q}
@@ -1105,6 +1134,7 @@ function ResultsScreen({ results, firstName, aiInsight, aiLoading }) {
             href="https://api.leadconnectorhq.com/widget/booking/ktnCWMUydaVYrfYSpCdi"
             target="_blank"
             rel="noreferrer"
+            onClick={() => track("cta_click", { location: "results" })}
             style={{
               display: "inline-block",
               background: "#fff",
