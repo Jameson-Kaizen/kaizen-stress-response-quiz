@@ -358,7 +358,7 @@ const TYPE_INFO = {
     subtitle: "Flight Response",
     color: BRAND.blue,
     tagline: "Your nervous system accelerates, scanning for exits, solutions, and safer ground.",
-    icon: "🌊",
+    icon: "✈️",
   },
   freeze: {
     label: "The Still Point",
@@ -981,7 +981,7 @@ function ResultsScreen({ results, firstName, aiInsight, aiLoading }) {
       <div style={{ maxWidth: 760, margin: "0 auto", padding: "0 24px 80px" }}>
 
         {/* SECONDARY PATTERN */}
-        <Card style={{ marginTop: -32, background: "#fff", border: `2px solid ${secondaryInfo.color}30` }}>
+        <Card style={{ marginTop: -32, position: "relative", zIndex: 2, background: "#fff", border: `2px solid ${secondaryInfo.color}30` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
             <span style={{ fontSize: 20 }}>{secondaryInfo.icon}</span>
             <div>
