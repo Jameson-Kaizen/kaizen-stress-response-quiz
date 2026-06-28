@@ -62,7 +62,7 @@ const BRAND = {
 // Phase 1 (now): quiz + email gate live; AI insight hidden, no lead capture yet.
 // Phase 2: set LEAD_ENDPOINT to the cloud-function URL to capture leads into GHL.
 // Phase 3: set AI_ENABLED = true once the same function returns the AI insight.
-const AI_ENABLED = false;
+const AI_ENABLED = true;
 const LEAD_ENDPOINT = "https://kaizen-stress-quiz.jameson-84b.workers.dev";
 
 // ─── ANALYTICS ────────────────────────────────────────────────────────────────
@@ -477,24 +477,26 @@ function StressQuiz() {
     track("lead_submit", {});
     track("quiz_complete", { primary: scores.primary, secondary: scores.secondary });
     track("outcome", { outcome: scores.primary });
-    if (LEAD_ENDPOINT) {
-      try {
-        fetch(LEAD_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            firstName, email, consent: true,
-            outcome: scores.primary, secondary: scores.secondary,
-            scores: scores.totals, attribution: ATTRIBUTION,
-          }),
-        }).catch(() => {});
-      } catch (e) {}
-    }
     setResults(scores);
     setScreen("results");
     setLoading(false);
-    // Fire AI insight
-    if (AI_ENABLED) generateAiInsight(scores, firstName);
+    // Lead capture + the AI insight both come back from the Worker in one request.
+    if (LEAD_ENDPOINT) {
+      if (AI_ENABLED) setAiLoading(true);
+      fetch(LEAD_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName, email, consent: true,
+          outcome: scores.primary, secondary: scores.secondary,
+          scores: scores.totals, attribution: ATTRIBUTION,
+        }),
+      })
+        .then((r) => r.json())
+        .then((r) => { if (AI_ENABLED) setAiInsight((r && r.insight) || ""); })
+        .catch(() => {})
+        .finally(() => { if (AI_ENABLED) setAiLoading(false); });
+    }
   }
 
   async function generateAiInsight(scores, name) {
