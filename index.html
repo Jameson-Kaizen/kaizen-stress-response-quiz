@@ -14,6 +14,22 @@
     gtag('js', new Date());
     gtag('config', 'G-W56RJ3LXWW');
   </script>
+
+  <!-- Meta Pixel -->
+  <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1089881403604799');
+    fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1089881403604799&ev=PageView&noscript=1" alt="" /></noscript>
   <meta name="description" content="Your nervous system has a default setting under stress. In 24 questions, discover whether you fight, flee, freeze, or fawn, and what it means for your focus and relationships." />
 
   <!-- Open Graph / share -->
@@ -477,6 +493,7 @@ function StressQuiz() {
     track("lead_submit", {});
     track("quiz_complete", { primary: scores.primary, secondary: scores.secondary });
     track("outcome", { outcome: scores.primary });
+    if (window.fbq) fbq("track", "Lead");
     setResults(scores);
     setScreen("results");
     setLoading(false);
@@ -543,7 +560,7 @@ Use ${name}'s name once in the first paragraph. Keep each paragraph focused and 
 
   // ── SCREENS ──────────────────────────────────────────────────────────────────
 
-  if (screen === "intro") return <IntroScreen onStart={() => { track("quiz_start", { source: ATTRIBUTION.utm_source || "direct" }); setScreen("quiz"); }} />;
+  if (screen === "intro") return <IntroScreen onStart={() => { track("quiz_start", { source: ATTRIBUTION.utm_source || "direct" }); if (window.fbq) fbq("trackCustom", "QuizStart"); setScreen("quiz"); }} />;
   if (screen === "quiz") return (
     <QuizScreen
       q={q}
