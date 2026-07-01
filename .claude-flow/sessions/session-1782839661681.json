@@ -1,0 +1,14 @@
+{
+  "id": "session-1782839661681",
+  "startedAt": "2026-06-30T17:14:21.681Z",
+  "cwd": "/Users/jamesonwelbourn/Documents/Claude/Projects/Kaizen-Funnels/Stress-Response-Quiz/site",
+  "context": {},
+  "metrics": {
+    "edits": 1,
+    "commands": 0,
+    "tasks": 0,
+    "errors": 0
+  },
+  "endedAt": "2026-06-30T18:32:37.156Z",
+  "duration": 4695477
+}
